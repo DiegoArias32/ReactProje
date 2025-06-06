@@ -1,19 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import Navigation from './Src/navigation/Navigation';
 
-export default function App() {
+export default function Details() {
   return (
-    
-    <Navigation />
-  
-  )
+    <View style={styles.container}>
+      <Text>PruebaDetails</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'green',
     alignItems: 'center',
     justifyContent: 'center',
   },

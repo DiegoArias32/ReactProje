@@ -1,19 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import Navigation from './Src/navigation/Navigation';
 
-export default function App() {
+export default function Stack() {
   return (
-    
-    <Navigation />
-  
-  )
+    <View style={styles.container}>
+      <Text>PruebaStack</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'red',
     alignItems: 'center',
     justifyContent: 'center',
   },
