@@ -1,5 +1,4 @@
-export type HomeStackParamList = {
-    Home: undefined;
-    Details: {id:string};
-    Stack: undefined;
-    };
+export type ClientStackParamList = {
+    Client: undefined;
+    Details: {id: string};
+};
