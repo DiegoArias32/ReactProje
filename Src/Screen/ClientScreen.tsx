@@ -8,33 +8,25 @@ type ClientScreenNavigationProps = NativeStackNavigationProp<
   ClientStackParamList, 'Client'
 >;
 
-export default function Client() {
+export default function ClientScreen() {
   const navigation = useNavigation<ClientScreenNavigationProps>();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text1}>Gestión de Clientes</Text>
+      <Text style={styles.title}>Gestión de Clientes</Text>
       <StatusBar style="auto" />
       
-      <Pressable 
-        onPress={() => navigation.navigate('Details', { id: 'client-1' })}
-      >
-        <Text style={styles.text2}>Ver Cliente 1</Text>
-      </Pressable>
-      
-      <Pressable
-        onPress={() => navigation.navigate('Details', { id: 'client-2' })}
-      >
-        <Text style={styles.text2}>Ver Cliente 2</Text>
-      </Pressable>
-      
-      <Pressable>
-        <Text style={styles.text2}>Agregar Cliente</Text>
-      </Pressable>
-      
-      <Pressable>
-        <Text style={styles.text2}>Lista de Clientes</Text>
-      </Pressable>
+      <View style={styles.buttonContainer}>
+        <Pressable 
+          style={styles.button}
+          onPress={() => navigation.navigate('ClientList')}
+        >
+          <Text style={styles.buttonText}>📋 Lista de Clientes</Text>
+        </Pressable>
+        
+        
+
+      </View>
     </View>
   );
 }
@@ -42,21 +34,38 @@ export default function Client() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'lightblue',
+    backgroundColor: '#f5f5f5',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 20,
   },
-  text1: {
-    fontFamily: 'Roboto',
-    fontSize: 30,
-    marginBottom: 20,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 40,
+    color: '#333',
+    textAlign: 'center',
   },
-  text2: {
-    fontFamily: 'Arial',
-    fontSize: 20,
-    backgroundColor: 'silver',
-    padding: 10,
-    margin: 5,
-    borderRadius: 5,
-  }
+  buttonContainer: {
+    width: '100%',
+    maxWidth: 300,
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });

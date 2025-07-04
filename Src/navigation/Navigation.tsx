@@ -1,39 +1,62 @@
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+// Importar pantallas
+import ClientListScreen from "../Screen/ClientListScreen";
 import ClientScreen from "../Screen/ClientScreen";
 import DetailsScreen from "../Screen/DetailsScreen";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import ClientRegisterScreen from "../Screen/ClientRegisterScreen";
+import ClientUpdateScreen from "../Screen/ClientUpdateScreen";
 
 // Tipos de navegación
 export type ClientStackParamList = {
+    ClientList: undefined;
     Client: undefined;
-    Details: {id: string};
+    Details: { id: string };
+    ClientRegister: undefined;
+    ClientUpdate: { id: string };
 };
 
-const clientStackNavigator = createNativeStackNavigator<ClientStackParamList>(); 
+const ClientStackNavigator = createNativeStackNavigator<ClientStackParamList>(); 
 
-function ClientStack(){
+function ClientStack() {
     return (
-        <clientStackNavigator.Navigator initialRouteName="Client">
-            <clientStackNavigator.Screen 
+        <ClientStackNavigator.Navigator initialRouteName="Client">
+            <ClientStackNavigator.Screen 
+                name="ClientList" 
+                component={ClientListScreen}
+                options={{ title: 'Lista de Clientes' }}
+            />
+            <ClientStackNavigator.Screen 
                 name="Client" 
                 component={ClientScreen}
                 options={{ title: 'Gestión de Clientes' }}
             />
-            <clientStackNavigator.Screen 
+            <ClientStackNavigator.Screen 
                 name="Details" 
                 component={DetailsScreen}
                 options={{ title: 'Detalles del Cliente' }}
             />
-        </clientStackNavigator.Navigator>
+            <ClientStackNavigator.Screen 
+                name="ClientRegister" 
+                component={ClientRegisterScreen}
+                options={{ title: 'Nuevo Cliente' }}
+            />
+            <ClientStackNavigator.Screen 
+                name="ClientUpdate" 
+                component={ClientUpdateScreen}
+                options={{ title: 'Editar Cliente' }}
+            />
+        </ClientStackNavigator.Navigator>
     );
 }
 
 const Tab = createBottomTabNavigator();
 
-function MyTabs(){
+function MyTabs() {
     return (
         <Tab.Navigator>
             <Tab.Screen 

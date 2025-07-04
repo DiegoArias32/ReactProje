@@ -8,9 +8,10 @@ import { deleteClient } from "../api/services/ClientServices";
 
 interface Props {
     data: IClient;
+    onRefresh?: () => void; // Callback para actualizar la lista
 }
 
-const ClientCard: React.FC<Props> = ({ data }) => {
+const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
     const navigation =
         useNavigation<NativeStackNavigationProp<ClientStackParamList>>();
 
@@ -21,7 +22,10 @@ const ClientCard: React.FC<Props> = ({ data }) => {
     const handleDelete = async () => {
         try {
             await deleteClient(data.id);
-            // Podrías agregar aquí una función de callback para actualizar la lista
+            console.log("✅ Cliente eliminado exitosamente");
+            if (onRefresh) {
+                onRefresh(); // Actualizar la lista después de eliminar
+            }
         } catch (error) {
             console.error("Error al eliminar cliente:", error);
         }
@@ -31,12 +35,13 @@ const ClientCard: React.FC<Props> = ({ data }) => {
         navigation.navigate("Details", { id: data.id });
     };
 
+
+
     return (
         <View style={styles.card}>
-            <Text style={styles.title}>{data.name}</Text>
+
             <Text style={styles.text}>Email: {data.email}</Text>
             <Text style={styles.text}>Teléfono: {data.phone}</Text>
-            <Text style={styles.text}>Dirección: {data.address}</Text>
 
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.buttonView} onPress={handleViewDetails}>

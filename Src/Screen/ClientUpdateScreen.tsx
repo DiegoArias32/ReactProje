@@ -1,19 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Button, StyleSheet, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ClientStackParamList } from "../navigation/types";
+import { getClientById, updateClient } from "../api/services/ClientServices";
 import { IClient } from "../api/types/IClient";
-import { createClient } from "../api/services/ClientServices";
 import ClientForm from "../Components/ClientForm";
 
-type ClientRegisterNavigationProp = NativeStackNavigationProp<
+type ClientUpdateRouteProp = RouteProp<ClientStackParamList, "ClientUpdate">;
+type ClientUpdateNavigationProp = NativeStackNavigationProp<
   ClientStackParamList,
-  "ClientRegister"
+  "ClientUpdate"
 >;
 
-const ClientRegisterScreen: React.FC = () => {
-  const navigation = useNavigation<ClientRegisterNavigationProp>();
+const ClientUpdateScreen: React.FC = () => {
+  const route = useRoute<ClientUpdateRouteProp>();
+  const navigation = useNavigation<ClientUpdateNavigationProp>();
+  const { id } = route.params;
+
   const [form, setForm] = useState<IClient>({
     id: "",
     first_name: "",
@@ -24,11 +28,27 @@ const ClientRegisterScreen: React.FC = () => {
     updatedAt: "",
   });
 
+  useEffect(() => {
+    const fetchClient = async () => {
+      try {
+        console.log("📋 Obteniendo cliente por ID:", id);
+        const client = await getClientById(id);
+        console.log("✅ Cliente obtenido:", client);
+        setForm(client);
+      } catch (error) {
+        console.error("❌ Error al obtener cliente:", error);
+        Alert.alert("Error", "No se pudo cargar la información del cliente");
+      }
+    };
+
+    fetchClient();
+  }, [id]);
+
   const handleChange = (field: keyof IClient, value: string) => {
     setForm({ ...form, [field]: value });
   };
 
-  const registerClient = async () => {
+  const updateClientData = async () => {
     // Validaciones básicas
     if (!form.first_name.trim()) {
       Alert.alert("Error", "El primer nombre es obligatorio");
@@ -48,13 +68,13 @@ const ClientRegisterScreen: React.FC = () => {
     }
 
     try {
-      console.log("📝 Enviando datos al servidor:", form);
-      const result = await createClient(form);
-      console.log("✅ Cliente creado exitosamente:", result);
+      console.log("📝 Actualizando cliente:", form);
+      const result = await updateClient(id, form);
+      console.log("✅ Cliente actualizado exitosamente:", result);
       
       Alert.alert(
         "Éxito",
-        "Cliente registrado correctamente",
+        "Cliente actualizado correctamente",
         [
           {
             text: "OK",
@@ -63,17 +83,17 @@ const ClientRegisterScreen: React.FC = () => {
         ]
       );
     } catch (error) {
-      console.error("❌ Error al registrar cliente:", error);
-      Alert.alert("Error", "No se pudo registrar el cliente");
+      console.error("❌ Error al actualizar cliente:", error);
+      Alert.alert("Error", "No se pudo actualizar el cliente");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nuevo Cliente</Text>
+      <Text style={styles.title}>Editar Cliente</Text>
       <ClientForm form={form} handleChange={handleChange} />
       <View style={styles.buttonContainer}>
-        <Button title="Guardar Cliente" onPress={registerClient} />
+        <Button title="Guardar Cambios" onPress={updateClientData} />
         <Button 
           title="Cancelar" 
           onPress={() => navigation.goBack()} 
@@ -102,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ClientRegisterScreen;
+export default ClientUpdateScreen;

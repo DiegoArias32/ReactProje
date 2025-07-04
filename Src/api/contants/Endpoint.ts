@@ -1,3 +1,3 @@
-const API_BASE_URL="localhost:8080/api/clients";
+const API_BASE_URL="http://localhost:8080/api/clients";
 
-export const CLIENT_END_POINT= `${API_BASE_URL}/book/`;
+export const CLIENT_END_POINT= `${API_BASE_URL}`;

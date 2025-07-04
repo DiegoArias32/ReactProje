@@ -12,9 +12,15 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
     <ScrollView contentContainerStyle={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="Nombre completo"
-        value={form.name}
-        onChangeText={(text) => handleChange("name", text)}
+        placeholder="Primer nombre"
+        value={form.first_name}
+        onChangeText={(text) => handleChange("first_name", text)}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Apellido"
+        value={form.last_name}
+        onChangeText={(text) => handleChange("last_name", text)}
       />
       <TextInput
         style={styles.input}
@@ -30,14 +36,6 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
         value={form.phone}
         onChangeText={(text) => handleChange("phone", text)}
         keyboardType="phone-pad"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Dirección"
-        value={form.address}
-        onChangeText={(text) => handleChange("address", text)}
-        multiline
-        numberOfLines={3}
       />
     </ScrollView>
   );
