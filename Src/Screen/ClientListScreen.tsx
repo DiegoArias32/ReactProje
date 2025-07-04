@@ -31,6 +31,7 @@ const ClientListScreen: React.FC = () => {
   const fetchClients = async () => {
     try {
       const data = await getClients();
+      console.log("📋 Clientes obtenidos:", data); // Debug log
       setClients(data);
     } catch (error) {
       console.error("Error al obtener clientes:", error);
@@ -69,7 +70,11 @@ const ClientListScreen: React.FC = () => {
         </View>
       ) : (
         clients.map((client) => (
-          <ClientCard key={client.id} data={client} />
+          <ClientCard 
+            key={client.id || `client-${Math.random()}`} // Usa data.id
+            data={client} 
+            onRefresh={fetchClients} // ✅ Ahora se pasa la función de refresh
+          />
         ))
       )}
     </ScrollView>
