@@ -1,9 +1,7 @@
 export interface IClient {
     id: string;
-    first_name: string;
-    last_name: string;
+    firstName: string;    // Cambiado de first_name a firstName
+    lastName: string;     // Cambiado de last_name a lastName
     email: string;
     phone: string;
-    createdAt?: string;
-    updatedAt?: string;
 }

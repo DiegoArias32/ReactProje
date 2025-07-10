@@ -76,7 +76,7 @@ export const createClient = async (client: IClient): Promise<IClient> => {
         console.log("➕ Creando cliente:", client);
         
         // Validar datos antes de enviar
-        if (!client.first_name || !client.last_name || !client.email || !client.phone) {
+        if (!client.firstName || !client.lastName || !client.email || !client.phone) {
             throw new Error("Todos los campos son requeridos");
         }
         
@@ -93,18 +93,27 @@ export const createClient = async (client: IClient): Promise<IClient> => {
             throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
         }
         
-        const data = await response.json();
-        console.log("✅ Cliente creado por el servidor:", data);
-        
-        // ✅ Transformar los datos: mapear idClient a id
-        const transformedData = {
-            ...data,
-            id: data.idClient?.toString() || data.id, // Mapear idClient a id
-        };
-        
-        console.log("🔄 Cliente transformado:", transformedData);
-        
-        return transformedData;
+        // ✅ Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            console.log("✅ Cliente creado por el servidor:", data);
+            
+            // Transformar los datos
+            const transformedData = {
+                ...data,
+                id: data.idClient?.toString() || data.id,
+            };
+            
+            return transformedData;
+        } else {
+            // Si no es JSON, crear un objeto con los datos enviados
+            console.log("✅ Cliente creado exitosamente (respuesta de texto)");
+            return {
+                ...client,
+                id: Date.now().toString(), // ID temporal hasta que se recarguen los datos
+            };
+        }
     } catch (error) {
         console.error("❌ Error en createClient:", error);
         throw error;

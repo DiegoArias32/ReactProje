@@ -16,12 +16,11 @@ const ClientRegisterScreen: React.FC = () => {
   const navigation = useNavigation<ClientRegisterNavigationProp>();
   const [form, setForm] = useState<IClient>({
     id: "",
-    first_name: "",
-    last_name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
-    createdAt: "",
-    updatedAt: "",
+ 
   });
 
   const handleChange = (field: keyof IClient, value: string) => {
@@ -30,11 +29,11 @@ const ClientRegisterScreen: React.FC = () => {
 
   const registerClient = async () => {
     // Validaciones básicas
-    if (!form.first_name.trim()) {
+    if (!form.firstName.trim()) {
       Alert.alert("Error", "El primer nombre es obligatorio");
       return;
     }
-    if (!form.last_name.trim()) {
+    if (!form.lastName.trim()) {
       Alert.alert("Error", "El apellido es obligatorio");
       return;
     }

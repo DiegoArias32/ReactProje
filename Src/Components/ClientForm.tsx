@@ -13,14 +13,14 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
       <TextInput
         style={styles.input}
         placeholder="Primer nombre"
-        value={form.first_name}
-        onChangeText={(text) => handleChange("first_name", text)}
+        value={form.firstName}
+        onChangeText={(text) => handleChange("firstName", text)}
       />
       <TextInput
         style={styles.input}
         placeholder="Apellido"
-        value={form.last_name}
-        onChangeText={(text) => handleChange("last_name", text)}
+        value={form.lastName}
+        onChangeText={(text) => handleChange("lastName", text)}
       />
       <TextInput
         style={styles.input}

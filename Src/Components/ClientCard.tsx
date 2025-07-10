@@ -100,7 +100,7 @@ const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
     };
 
     // Mostrar el nombre completo si existe
-    const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
 
     // Debug: Logs adicionales para verificar el estado del componente
     console.log("🏗️ ClientCard renderizando...");
