@@ -1,126 +1,115 @@
-// Src/Components/ClientCard.tsx
+// Src/Components/DishCard.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { IClient } from "../api/types/IClient";
+import { IDish } from "../api/types/IDish";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { deleteClient } from "../api/services/ClientServices";
+import { DishStackParamList } from "../navigation/types";
+import { deleteDish } from "../api/services/DishServices";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
 interface Props {
-    data: IClient;
+    data: IDish;
     onRefresh?: () => void;
 }
 
-const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
+const DishCard: React.FC<Props> = ({ data, onRefresh }) => {
     const navigation =
-        useNavigation<NativeStackNavigationProp<ClientStackParamList>>();
+        useNavigation<NativeStackNavigationProp<DishStackParamList>>();
 
     const handleEdit = () => {
-        console.log("✏️ BOTÓN EDITAR PRESIONADO");
-        console.log("🔍 ID para editar:", data.id);
-        
         if (!data.id) {
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID del plato no válido");
             return;
         }
-        navigation.navigate("ClientUpdate", { id: data.id });
+        navigation.navigate("DishUpdate", { id: data.id });
     };
 
     const handleDelete = async () => {
-        console.log("🚨 BOTÓN ELIMINAR PRESIONADO");
-        console.log("🔍 ID del cliente:", data.id);
-        
         if (!data.id) {
-            console.error("❌ ID del cliente no válido:", data);
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID del plato no válido");
             return;
         }
 
         try {
-            console.log("🗑️ Iniciando eliminación del cliente...");
             const idString = String(data.id);
-            
-            await deleteClient(idString);
-            console.log("✅ Cliente eliminado del servidor exitosamente");
+            await deleteDish(idString);
             
             if (onRefresh) {
-                console.log("✅ Llamando a onRefresh()");
                 onRefresh();
             }
             
         } catch (error) {
-            console.error("❌ Error al eliminar cliente:", error);
+            console.error("❌ Error al eliminar plato:", error);
             
             let errorMessage = 'Error desconocido';
             if (error instanceof Error) {
                 errorMessage = error.message;
-            } else if (typeof error === 'string') {
-                errorMessage = error;
-            } else if (typeof error === 'object' && error !== null && 'message' in error) {
-                errorMessage = (error as { message: string }).message;
             }
             
-            Alert.alert(
-                "Error", 
-                `No se pudo eliminar el cliente: ${errorMessage}`
-            );
+            Alert.alert("Error", `No se pudo eliminar el plato: ${errorMessage}`);
         }
     };
 
     const handleViewDetails = () => {
-        console.log("👁️ BOTÓN VER PRESIONADO");
-        console.log("🔍 ID para ver detalles:", data.id);
-        
         if (!data.id) {
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID del plato no válido");
             return;
         }
-        navigation.navigate("Details", { id: data.id });
+        navigation.navigate("DishDetails", { id: data.id });
     };
 
     // Generar iniciales para el avatar
     const getInitials = () => {
-        const firstName = data.firstName || '';
-        const lastName = data.lastName || '';
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+        const name = data.name || '';
+        const words = name.split(' ');
+        if (words.length >= 2) {
+            return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
     };
 
-    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+    // Formatear precio
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0,
+        }).format(price);
+    };
 
     return (
         <View style={CyberStyles.clientCard}>
-            {/* Información del cliente */}
+            {/* Información del plato */}
             <View style={CyberStyles.clientInfo}>
                 {/* Avatar futurista */}
-                <View style={CyberStyles.cyberAvatar}>
+                <View style={[CyberStyles.cyberAvatar, { backgroundColor: CyberColors.warningNeon }]}>
                     <Text style={CyberStyles.avatarText}>{getInitials()}</Text>
                 </View>
                 
-                {/* Detalles del cliente */}
+                {/* Detalles del plato */}
                 <View style={CyberStyles.clientDetails}>
-                    {fullName && (
-                        <Text style={CyberStyles.clientName}>{fullName}</Text>
-                    )}
-                    <Text style={CyberStyles.clientEmail}>
-                        {data.email || 'No especificado'}
+                    <Text style={CyberStyles.clientName}>
+                        {data.name || 'Plato sin nombre'}
                     </Text>
-                    <Text style={CyberStyles.clientPhone}>
-                        {data.phone || 'No especificado'}
+                    <Text style={CyberStyles.clientEmail}>
+                        {data.description || 'Sin descripción'}
+                    </Text>
+                    <Text style={[CyberStyles.clientPhone, { color: CyberColors.warningNeon, fontWeight: 'bold' }]}>
+                        {formatPrice(data.price || 0)}
                     </Text>
                 </View>
 
                 {/* Badge de estado */}
                 <View style={[
                     CyberStyles.statusBadge,
-                    CyberStyles.statusActive // Puedes cambiar según el estado
+                    CyberStyles.statusActive
                 ]}>
                     <Text style={[
                         CyberStyles.statusText,
                         CyberStyles.statusActiveText
                     ]}>
-                        ACTIVE
+                        AVAILABLE
                     </Text>
                 </View>
             </View>
@@ -167,7 +156,7 @@ const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
                 </TouchableOpacity>
             </View>
 
-            {/* ID debug (opcional) */}
+            {/* ID debug */}
             <Text style={[CyberStyles.mutedText, { fontSize: 10, textAlign: 'center', marginTop: 8 }]}>
                 ID: {data.id || 'N/A'}
             </Text>
@@ -175,4 +164,4 @@ const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
     );
 };
 
-export default ClientCard;
+export default DishCard;

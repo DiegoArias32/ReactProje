@@ -1,70 +1,67 @@
-// Src/Screen/ClientRegisterScreen.tsx
+// Src/Screen/OrderRegisterScreen.tsx
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { IClient } from "../api/types/IClient";
-import { createClient } from "../api/services/ClientServices";
-import ClientForm from "../Components/ClientForm";
+import { OrderStackParamList } from "../navigation/types";
+import { IOrder } from "../api/types/IOrder";
+import { createOrder } from "../api/services/OrderServices";
+import OrderForm from "../Components/OrderForm";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientRegisterNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientRegister"
+type OrderRegisterNavigationProp = NativeStackNavigationProp<
+  OrderStackParamList,
+  "OrderRegister"
 >;
 
-const ClientRegisterScreen: React.FC = () => {
-  const navigation = useNavigation<ClientRegisterNavigationProp>();
+const OrderRegisterScreen: React.FC = () => {
+  const navigation = useNavigation<OrderRegisterNavigationProp>();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<IClient>({
+  const [form, setForm] = useState<IOrder>({
     id: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    idCustomer: "",
+    date: new Date().toISOString(),
+    status: "pending",
   });
 
-  const handleChange = (field: keyof IClient, value: string) => {
+  const handleChange = (field: keyof IOrder, value: string) => {
     setForm({ ...form, [field]: value });
   };
 
-  const registerClient = async () => {
+  const registerOrder = async () => {
     // Validaciones básicas
-    if (!form.firstName.trim()) {
-      Alert.alert("Error", "El primer nombre es obligatorio");
+    if (!form.idCustomer.trim()) {
+      Alert.alert("Error", "El ID del cliente es obligatorio");
       return;
     }
-    if (!form.lastName.trim()) {
-      Alert.alert("Error", "El apellido es obligatorio");
-      return;
-    }
-    if (!form.email.trim()) {
-      Alert.alert("Error", "El email es obligatorio");
-      return;
-    }
-    if (!form.phone.trim()) {
-      Alert.alert("Error", "El teléfono es obligatorio");
+    if (!form.status.trim()) {
+      Alert.alert("Error", "El estado de la orden es obligatorio");
       return;
     }
 
-    // Validación de email básica
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      Alert.alert("Error", "Por favor ingresa un email válido");
+    // Validar que el ID del cliente sea numérico
+    if (isNaN(Number(form.idCustomer))) {
+      Alert.alert("Error", "El ID del cliente debe ser un número");
       return;
     }
 
     try {
       setLoading(true);
-      const result = await createClient(form);
+      
+      // Preparar datos para envío
+      const orderToSend = {
+        ...form,
+        date: new Date().toISOString(), // Siempre usar fecha actual
+      };
+      
+      const result = await createOrder(orderToSend);
       
       // Navegar de regreso tras éxito
       navigation.goBack();
       
     } catch (error) {
-      console.error("❌ Error al registrar cliente:", error);
-      Alert.alert("Error", "No se pudo registrar el cliente en la matriz");
+      console.error("❌ Error al registrar orden:", error);
+      Alert.alert("Error", "No se pudo crear la orden en el sistema");
     } finally {
       setLoading(false);
     }
@@ -72,9 +69,9 @@ const ClientRegisterScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>NEW CLIENT</Text>
+      <Text style={CyberStyles.headerTitle}>NEW ORDER</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Add a new entity to the matrix
+        Create a new order in the system
       </Text>
     </View>
   );
@@ -88,21 +85,19 @@ const ClientRegisterScreen: React.FC = () => {
           loading && { opacity: 0.7 }
         ]}
         onPress={() => {
-          registerClient();
+          registerOrder();
         }}
         disabled={loading}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          {loading ? "UPLOADING TO MATRIX..." : "SAVE CLIENT"}
+          {loading ? "CREATING ORDER..." : "CREATE ORDER"}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.secondaryButton]}
-        onPress={() => {
-          navigation.goBack();
-        }}
+        onPress={() => navigation.goBack()}
         disabled={loading}
         activeOpacity={0.8}
       >
@@ -118,11 +113,11 @@ const ClientRegisterScreen: React.FC = () => {
       {renderHeader()}
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ClientForm form={form} handleChange={handleChange} />
+        <OrderForm form={form} handleChange={handleChange} />
         {renderFooter()}
       </ScrollView>
     </View>
   );
 };
 
-export default ClientRegisterScreen;
+export default OrderRegisterScreen;

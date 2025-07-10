@@ -1,22 +1,22 @@
-// Src/Components/ClientForm.tsx
+// Src/Components/EmployeeForm.tsx
 import React, { useState } from "react";
-import { IClient } from "../api/types/IClient";
+import { IEmployee } from "../api/types/IEmployee";
 import { ScrollView, TextInput, View, Text } from "react-native";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
 interface Props {
-  form: IClient;
-  handleChange: (field: keyof IClient, value: string) => void;
+  form: IEmployee;
+  handleChange: (field: keyof IEmployee, value: string | number) => void;
 }
 
-const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
+const EmployeeForm: React.FC<Props> = ({ form, handleChange }) => {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const renderInput = (
-    field: keyof IClient,
+    field: keyof IEmployee,
     placeholder: string,
     label: string,
-    keyboardType: 'default' | 'email-address' | 'phone-pad' = 'default'
+    keyboardType: 'default' | 'numeric' = 'default'
   ) => (
     <View style={{ marginBottom: 20 }}>
       <Text style={CyberStyles.inputLabel}>{label}</Text>
@@ -27,15 +27,38 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
         ]}
         placeholder={placeholder}
         placeholderTextColor={CyberColors.textMuted}
-        value={form[field] || ''}
-        onChangeText={(text) => handleChange(field, text)}
+        value={field === 'salary' ? form[field]?.toString() || '' : (form[field] as string) || ''}
+        onChangeText={(text) => {
+          if (field === 'salary') {
+            const numericValue = parseFloat(text) || 0;
+            handleChange(field, numericValue);
+          } else {
+            handleChange(field, text);
+          }
+        }}
         keyboardType={keyboardType}
-        autoCapitalize={keyboardType === 'email-address' ? 'none' : 'words'}
+        autoCapitalize={field === 'salary' ? 'none' : 'words'}
         onFocus={() => setFocusedField(field)}
         onBlur={() => setFocusedField(null)}
       />
     </View>
   );
+
+  const formatSalary = (salary: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(salary);
+  };
+
+  const getInitials = () => {
+    const firstName = form.firstName || '';
+    const lastName = form.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim();
 
   return (
     <ScrollView 
@@ -44,15 +67,15 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
     >
       <View style={[CyberStyles.cyberCard, { marginHorizontal: 0 }]}>
         <View style={CyberStyles.cardHeader}>
-          <Text style={CyberStyles.cardTitle}>CLIENT DATA INPUT</Text>
+          <Text style={CyberStyles.cardTitle}>EMPLOYEE DATA INPUT</Text>
         </View>
 
         {renderInput('firstName', 'Enter first name...', 'FIRST NAME')}
         {renderInput('lastName', 'Enter last name...', 'LAST NAME')}
-        {renderInput('email', 'Enter email address...', 'EMAIL ADDRESS', 'email-address')}
-        {renderInput('phone', 'Enter phone number...', 'PHONE NUMBER', 'phone-pad')}
+        {renderInput('position', 'Enter position...', 'POSITION')}
+        {renderInput('salary', 'Enter salary...', 'SALARY (COP)', 'numeric')}
 
-        {/* Preview del cliente */}
+        {/* Preview del empleado */}
         <View style={{
           marginTop: 20,
           padding: 15,
@@ -66,21 +89,28 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
           </Text>
           
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={[CyberStyles.cyberAvatar, { width: 40, height: 40 }]}>
+            <View style={[CyberStyles.cyberAvatar, { 
+              width: 40, 
+              height: 40, 
+              backgroundColor: CyberColors.accentNeon 
+            }]}>
               <Text style={[CyberStyles.avatarText, { fontSize: 14 }]}>
-                {`${form.firstName?.charAt(0) || ''}${form.lastName?.charAt(0) || ''}`.toUpperCase()}
+                {getInitials()}
               </Text>
             </View>
             
             <View style={{ marginLeft: 15, flex: 1 }}>
               <Text style={CyberStyles.clientName}>
-                {`${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Unnamed Client'}
+                {fullName || 'Unnamed Employee'}
               </Text>
               <Text style={CyberStyles.clientEmail}>
-                {form.email || 'no-email@provided.com'}
+                {form.position || 'No position assigned'}
               </Text>
-              <Text style={CyberStyles.clientPhone}>
-                {form.phone || 'No phone provided'}
+              <Text style={[CyberStyles.clientPhone, { 
+                color: CyberColors.accentNeon, 
+                fontWeight: 'bold' 
+              }]}>
+                {formatSalary(form.salary || 0)}
               </Text>
             </View>
           </View>
@@ -90,4 +120,4 @@ const ClientForm: React.FC<Props> = ({ form, handleChange }) => {
   );
 };
 
-export default ClientForm;
+export default EmployeeForm;

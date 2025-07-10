@@ -1,4 +1,4 @@
-// Src/Screen/DetailsScreen.tsx
+// Src/Screen/DishDetailsScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { 
   View, 
@@ -10,60 +10,56 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ClientStackParamList } from '../navigation/types';
-import { getClientById, deleteClient } from '../api/services/ClientServices';
-import { IClient } from '../api/types/IClient';
+import { DishStackParamList } from '../navigation/types';
+import { getDishById, deleteDish } from '../api/services/DishServices';
+import { IDish } from '../api/types/IDish';
 import { CyberStyles, CyberColors } from '../styles/CyberStyles';
 
-type DetailsScreenProps = NativeStackScreenProps<ClientStackParamList, 'Details'>;
-type DetailsScreenNavigationProps = NativeStackNavigationProp<ClientStackParamList, 'Details'>;
+type DishDetailsScreenProps = NativeStackScreenProps<DishStackParamList, 'DishDetails'>;
+type DishDetailsScreenNavigationProps = NativeStackNavigationProp<DishStackParamList, 'DishDetails'>;
 
-const DetailsScreen: React.FC = () => {
-  const navigation = useNavigation<DetailsScreenNavigationProps>();
-  const route = useRoute<DetailsScreenProps['route']>();
+const DishDetailsScreen: React.FC = () => {
+  const navigation = useNavigation<DishDetailsScreenNavigationProps>();
+  const route = useRoute<DishDetailsScreenProps['route']>();
   const { id } = route.params;
 
-  const [client, setClient] = useState<IClient | null>(null);
+  const [dish, setDish] = useState<IDish | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    const fetchDish = async () => {
       try {
-        console.log("📋 Obteniendo detalles del cliente:", id);
+        console.log("📋 Obteniendo detalles del plato:", id);
         setLoading(true);
-        const clientData = await getClientById(id);
-        console.log("✅ Cliente obtenido:", clientData);
+        const dishData = await getDishById(id);
+        console.log("✅ Plato obtenido:", dishData);
         
-        // Mapear los campos correctamente
-        const mappedClient: IClient = {
-          id: clientData.id,
-          firstName: clientData.firstName || clientData.firstName || "",
-          lastName: clientData.lastName || clientData.lastName || "",
-          email: clientData.email || "",
-          phone: clientData.phone || "",
-        };
-        
-        setClient(mappedClient);
+        setDish({
+          id: dishData.id,
+          name: dishData.name || "",
+          description: dishData.description || "",
+          price: dishData.price || 0,
+        });
       } catch (error) {
-        console.error("❌ Error al obtener cliente:", error);
-        Alert.alert("Error", "No se pudo cargar la información del cliente");
+        console.error("❌ Error al obtener plato:", error);
+        Alert.alert("Error", "No se pudo cargar la información del plato");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClient();
+    fetchDish();
   }, [id]);
 
   const handleEdit = () => {
-    navigation.navigate("ClientUpdate", { id });
+    navigation.navigate("DishUpdate", { id });
   };
 
   const handleDelete = async () => {
     Alert.alert(
       "Confirmar Eliminación",
-      "¿Estás seguro de que quieres eliminar este cliente de la matriz?",
+      "¿Estás seguro de que quieres eliminar este plato de la matriz?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -72,14 +68,12 @@ const DetailsScreen: React.FC = () => {
           onPress: async () => {
             try {
               setDeleting(true);
-              await deleteClient(id);
-              console.log("✅ Cliente eliminado exitosamente");
-              Alert.alert("Éxito", "Cliente eliminado de la matriz correctamente", [
-                { text: "OK", onPress: () => navigation.goBack() }
-              ]);
+              await deleteDish(id);
+              console.log("✅ Plato eliminado exitosamente");
+              navigation.goBack();
             } catch (error) {
-              console.error("❌ Error al eliminar cliente:", error);
-              Alert.alert("Error", "No se pudo eliminar el cliente de la matriz");
+              console.error("❌ Error al eliminar plato:", error);
+              Alert.alert("Error", "No se pudo eliminar el plato de la matriz");
             } finally {
               setDeleting(false);
             }
@@ -89,11 +83,29 @@ const DetailsScreen: React.FC = () => {
     );
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getInitials = () => {
+    if (!dish) return '';
+    const name = dish.name || '';
+    const words = name.split(' ');
+    if (words.length >= 2) {
+      return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>CLIENT DETAILS</Text>
+      <Text style={CyberStyles.headerTitle}>DISH DETAILS</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Entity information from the matrix
+        Culinary information from the matrix
       </Text>
     </View>
   );
@@ -101,20 +113,20 @@ const DetailsScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Entity Data...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Dish Data...</Text>
     </View>
   );
 
-  const renderClientNotFound = () => (
+  const renderDishNotFound = () => (
     <View style={CyberStyles.emptyState}>
       <Text style={[CyberStyles.headerTitle, { fontSize: 60, opacity: 0.3 }]}>
         404
       </Text>
       <Text style={CyberStyles.emptyText}>
-        Entity not found in the matrix
+        Dish not found in the matrix
       </Text>
       <Text style={CyberStyles.emptySubtext}>
-        This client may have been disconnected
+        This dish may have been removed from the menu
       </Text>
       <TouchableOpacity 
         style={[
@@ -132,24 +144,35 @@ const DetailsScreen: React.FC = () => {
     </View>
   );
 
-  const renderClientDetails = () => {
-    if (!client) return null;
+  const renderDishDetails = () => {
+    if (!dish) return null;
 
-    const fullName = `${client.firstName} ${client.lastName}`.trim();
-    const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
+    const initials = getInitials();
 
     return (
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar y nombre principal */}
         <View style={[CyberStyles.cyberCard, { alignItems: 'center' }]}>
-          <View style={[CyberStyles.cyberAvatar, { width: 100, height: 100 }]}>
+          <View style={[CyberStyles.cyberAvatar, { 
+            width: 100, 
+            height: 100, 
+            backgroundColor: CyberColors.warningNeon 
+          }]}>
             <Text style={[CyberStyles.avatarText, { fontSize: 32 }]}>
               {initials}
             </Text>
           </View>
           
           <Text style={[CyberStyles.headerTitle, { fontSize: 24, marginTop: 15 }]}>
-            {fullName || 'Unnamed Entity'}
+            {dish.name || 'Unnamed Dish'}
+          </Text>
+          
+          <Text style={[CyberStyles.headerTitle, { 
+            fontSize: 20, 
+            marginTop: 10,
+            color: CyberColors.warningNeon 
+          }]}>
+            {formatPrice(dish.price)}
           </Text>
           
           <View style={[
@@ -161,7 +184,7 @@ const DetailsScreen: React.FC = () => {
               CyberStyles.statusText,
               CyberStyles.statusActiveText
             ]}>
-              ACTIVE
+              AVAILABLE
             </Text>
           </View>
         </View>
@@ -169,47 +192,49 @@ const DetailsScreen: React.FC = () => {
         {/* Información detallada */}
         <View style={CyberStyles.cyberCard}>
           <View style={CyberStyles.cardHeader}>
-            <Text style={CyberStyles.cardTitle}>ENTITY DATA</Text>
+            <Text style={CyberStyles.cardTitle}>DISH DATA</Text>
           </View>
           
           <View style={{ gap: 20 }}>
             {/* ID */}
             <View>
-              <Text style={CyberStyles.inputLabel}>ENTITY ID</Text>
+              <Text style={CyberStyles.inputLabel}>DISH ID</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.id || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{dish.id || 'N/A'}</Text>
               </View>
             </View>
 
             {/* Nombre */}
             <View>
-              <Text style={CyberStyles.inputLabel}>FIRST NAME</Text>
+              <Text style={CyberStyles.inputLabel}>DISH NAME</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.firstName || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{dish.name || 'N/A'}</Text>
               </View>
             </View>
 
-            {/* Apellido */}
+            {/* Descripción */}
             <View>
-              <Text style={CyberStyles.inputLabel}>LAST NAME</Text>
-              <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.lastName || 'N/A'}</Text>
+              <Text style={CyberStyles.inputLabel}>DESCRIPTION</Text>
+              <View style={[CyberStyles.cyberInput, { 
+                opacity: 0.7, 
+                minHeight: 80,
+                paddingTop: 15 
+              }]}>
+                <Text style={CyberStyles.cyberText}>{dish.description || 'N/A'}</Text>
               </View>
             </View>
 
-            {/* Email */}
+            {/* Precio */}
             <View>
-              <Text style={CyberStyles.inputLabel}>EMAIL ADDRESS</Text>
+              <Text style={CyberStyles.inputLabel}>PRICE (COP)</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.email || 'N/A'}</Text>
-              </View>
-            </View>
-
-            {/* Teléfono */}
-            <View>
-              <Text style={CyberStyles.inputLabel}>PHONE NUMBER</Text>
-              <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.phone || 'N/A'}</Text>
+                <Text style={[CyberStyles.cyberText, { 
+                  color: CyberColors.warningNeon,
+                  fontWeight: 'bold',
+                  fontSize: 18 
+                }]}>
+                  {formatPrice(dish.price)}
+                </Text>
               </View>
             </View>
           </View>
@@ -224,7 +249,7 @@ const DetailsScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <Text style={[CyberStyles.buttonText, CyberStyles.secondaryButtonText]}>
-              EDIT ENTITY
+              EDIT DISH
             </Text>
           </TouchableOpacity>
 
@@ -239,7 +264,7 @@ const DetailsScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <Text style={[CyberStyles.buttonText, CyberStyles.dangerButtonText]}>
-              {deleting ? "DISCONNECTING..." : "DELETE ENTITY"}
+              {deleting ? "REMOVING..." : "DELETE DISH"}
             </Text>
           </TouchableOpacity>
 
@@ -275,11 +300,11 @@ const DetailsScreen: React.FC = () => {
     );
   }
 
-  if (!client) {
+  if (!dish) {
     return (
       <View style={CyberStyles.cyberContainer}>
         {renderHeader()}
-        {renderClientNotFound()}
+        {renderDishNotFound()}
       </View>
     );
   }
@@ -287,9 +312,9 @@ const DetailsScreen: React.FC = () => {
   return (
     <View style={CyberStyles.cyberContainer}>
       {renderHeader()}
-      {renderClientDetails()}
+      {renderDishDetails()}
     </View>
   );
 };
 
-export default DetailsScreen;
+export default DishDetailsScreen;

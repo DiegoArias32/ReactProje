@@ -1,71 +1,100 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+// Src/Screen/ClientScreen.tsx
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ClientStackParamList } from '../navigation/types';
+import { CyberStyles, CyberColors } from '../styles/CyberStyles';
 
 type ClientScreenNavigationProps = NativeStackNavigationProp<
   ClientStackParamList, 'Client'
 >;
 
-export default function ClientScreen() {
+const ClientScreen: React.FC = () => {
   const navigation = useNavigation<ClientScreenNavigationProps>();
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Gestión de Clientes</Text>
-      <StatusBar style="auto" />
-      
-      <View style={styles.buttonContainer}>
-        <Pressable 
-          style={styles.button}
-          onPress={() => navigation.navigate('ClientList')}
-        >
-          <Text style={styles.buttonText}>📋 Lista de Clientes</Text>
-        </Pressable>
-        
-        
+  const renderHeader = () => (
+    <View style={CyberStyles.cyberHeader}>
+      <Text style={CyberStyles.headerTitle}>CYBER RESTO</Text>
+      <Text style={CyberStyles.headerSubtitle}>
+        Client Management System
+      </Text>
+    </View>
+  );
 
+  const renderLogo = () => (
+    <View style={{
+      alignItems: 'center',
+      padding: 40,
+    }}>
+      <View style={[CyberStyles.cyberAvatar, { 
+        width: 120, 
+        height: 120,
+        backgroundColor: 'transparent',
+        borderWidth: 4,
+        borderColor: CyberColors.primaryNeon,
+      }]}>
+        <Text style={[CyberStyles.avatarText, { 
+          fontSize: 40,
+          color: CyberColors.primaryNeon 
+        }]}>
+          🚀
+        </Text>
+      </View>
+      
+      <Text style={[CyberStyles.headerTitle, { 
+        fontSize: 32, 
+        marginTop: 20,
+        marginBottom: 10 
+      }]}>
+        CLIENT MATRIX
+      </Text>
+      
+      <Text style={[CyberStyles.secondaryText, { 
+        textAlign: 'center',
+        fontSize: 16,
+        lineHeight: 24 
+      }]}>
+        Welcome to the client management system.{'\n'}
+        Access and control your customer database.
+      </Text>
+    </View>
+  );
+
+  const renderMenuCard = () => (
+    <View style={CyberStyles.cyberCard}>
+      <View style={CyberStyles.cardHeader}>
+        <Text style={CyberStyles.cardTitle}>SYSTEM ACCESS</Text>
+      </View>
+      
+      <View style={{ gap: 20 }}>
+        <TouchableOpacity
+          style={[CyberStyles.cyberButton, CyberStyles.primaryButton]}
+          onPress={() => navigation.navigate('ClientList')}
+          activeOpacity={0.8}
+        >
+          <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
+            📋 ACCESS CLIENT DATABASE
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 40,
-    color: '#333',
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
+  return (
+    <View style={CyberStyles.cyberContainer}>
+      {renderHeader()}
+      
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 50 }}
+      >
+        {renderLogo()}
+        {renderMenuCard()}
+
+      </ScrollView>
+    </View>
+  );
+};
+
+export default ClientScreen;

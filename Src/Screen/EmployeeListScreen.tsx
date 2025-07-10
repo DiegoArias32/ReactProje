@@ -1,4 +1,4 @@
-// Src/Screen/ClientListScreen.tsx
+// Src/Screen/EmployeeListScreen.tsx
 import React, { useCallback, useEffect, useState } from "react";
 import { 
   View, 
@@ -11,63 +11,60 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { getClients } from "../api/services/ClientServices";
-import { IClient } from "../api/types/IClient";
-import ClientCard from "../Components/ClientCard";
+import { EmployeeStackParamList } from "../navigation/types";
+import { getEmployees } from "../api/services/EmployeeServices";
+import { IEmployee } from "../api/types/IEmployee";
+import EmployeeCard from "../Components/EmployeeCard";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientList"
+type EmployeeScreenNavigationProp = NativeStackNavigationProp<
+  EmployeeStackParamList,
+  "EmployeeList"
 >;
 
-const ClientListScreen: React.FC = () => {
-  const [clients, setClients] = useState<IClient[]>([]);
-  const [filteredClients, setFilteredClients] = useState<IClient[]>([]);
+const EmployeeListScreen: React.FC = () => {
+  const [employees, setEmployees] = useState<IEmployee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<IEmployee[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigation = useNavigation<ClientScreenNavigationProp>();
+  const navigation = useNavigation<EmployeeScreenNavigationProp>();
 
   useEffect(() => {
-    fetchClients();
+    fetchEmployees();
   }, []);
 
-  // Filtrar clientes según búsqueda
+  // Filtrar empleados según búsqueda
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredClients(clients);
+      setFilteredEmployees(employees);
     } else {
-      const filtered = clients.filter(client => {
-        const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
-        const email = client.email.toLowerCase();
-        const phone = client.phone.toLowerCase();
+      const filtered = employees.filter(employee => {
+        const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+        const position = employee.position.toLowerCase();
         const query = searchQuery.toLowerCase();
         
-        return fullName.includes(query) || 
-               email.includes(query) || 
-               phone.includes(query);
+        return fullName.includes(query) || position.includes(query);
       });
-      setFilteredClients(filtered);
+      setFilteredEmployees(filtered);
     }
-  }, [searchQuery, clients]);
+  }, [searchQuery, employees]);
 
   // Recargar la lista cuando la pantalla recibe foco
   useFocusEffect(
     useCallback(() => {
-      fetchClients();
+      fetchEmployees();
     }, [])
   );
 
-  const fetchClients = async () => {
+  const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const data = await getClients();
-      console.log("📋 Clientes obtenidos:", data);
-      setClients(data);
+      const data = await getEmployees();
+      console.log("📋 Empleados obtenidos:", data);
+      setEmployees(data);
     } catch (error) {
-      console.error("Error al obtener clientes:", error);
+      console.error("Error al obtener empleados:", error);
     } finally {
       setLoading(false);
     }
@@ -75,28 +72,43 @@ const ClientListScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchClients();
+    await fetchEmployees();
     setRefreshing(false);
   }, []);
 
+  // Calcular estadísticas
+  const calculateAverageSalary = () => {
+    if (employees.length === 0) return 0;
+    const total = employees.reduce((sum, emp) => sum + (emp.salary || 0), 0);
+    return total / employees.length;
+  };
+
+  const formatSalary = (salary: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(salary);
+  };
+
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>CLIENT MATRIX</Text>
+      <Text style={CyberStyles.headerTitle}>EMPLOYEE MATRIX</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Manage your digital customers in cyberspace
+        Manage your workforce database
       </Text>
     </View>
   );
 
   const renderSearchBar = () => (
     <View style={{ padding: 20 }}>
-      <Text style={CyberStyles.inputLabel}>Search in the Matrix</Text>
+      <Text style={CyberStyles.inputLabel}>Search Employees</Text>
       <TextInput
         style={[
           CyberStyles.cyberInput,
           searchQuery ? CyberStyles.inputFocused : {}
         ]}
-        placeholder="Search clients..."
+        placeholder="Search employees..."
         placeholderTextColor={CyberColors.textMuted}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -108,17 +120,17 @@ const ClientListScreen: React.FC = () => {
     <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.primaryButton]}
-        onPress={() => navigation.navigate("ClientRegister")}
+        onPress={() => navigation.navigate("EmployeeRegister")}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          + ADD NEW CLIENT
+          + ADD NEW EMPLOYEE
         </Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderClientStats = () => (
+  const renderEmployeeStats = () => (
     <View style={{ 
       flexDirection: 'row', 
       justifyContent: 'space-around', 
@@ -133,15 +145,24 @@ const ClientListScreen: React.FC = () => {
     }}>
       <View style={{ alignItems: 'center' }}>
         <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {clients.length}
+          {employees.length}
         </Text>
-        <Text style={CyberStyles.secondaryText}>TOTAL CLIENTS</Text>
+        <Text style={CyberStyles.secondaryText}>TOTAL STAFF</Text>
       </View>
       <View style={{ alignItems: 'center' }}>
         <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {filteredClients.length}
+          {filteredEmployees.length}
         </Text>
         <Text style={CyberStyles.secondaryText}>FILTERED</Text>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[CyberStyles.headerTitle, { 
+          fontSize: 14, 
+          color: CyberColors.accentNeon 
+        }]}>
+          {formatSalary(calculateAverageSalary())}
+        </Text>
+        <Text style={CyberStyles.secondaryText}>AVG SALARY</Text>
       </View>
     </View>
   );
@@ -149,22 +170,22 @@ const ClientListScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Matrix...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Employees...</Text>
     </View>
   );
 
   const renderEmptyState = () => (
     <View style={CyberStyles.emptyState}>
       <Text style={[CyberStyles.headerTitle, { fontSize: 60, opacity: 0.3 }]}>
-        404
+        👥
       </Text>
       <Text style={CyberStyles.emptyText}>
-        No clients found in the matrix
+        No employees found in the workforce
       </Text>
       <Text style={CyberStyles.emptySubtext}>
         {searchQuery ? 
           "Try adjusting your search parameters" : 
-          "Add your first client to get started"
+          "Add your first employee to get started"
         }
       </Text>
       {!searchQuery && (
@@ -174,11 +195,11 @@ const ClientListScreen: React.FC = () => {
             CyberStyles.primaryButton,
             { marginTop: 20 }
           ]}
-          onPress={() => navigation.navigate("ClientRegister")}
+          onPress={() => navigation.navigate("EmployeeRegister")}
           activeOpacity={0.8}
         >
           <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-            + CREATE FIRST CLIENT
+            + HIRE FIRST EMPLOYEE
           </Text>
         </TouchableOpacity>
       )}
@@ -211,16 +232,16 @@ const ClientListScreen: React.FC = () => {
       >
         {renderSearchBar()}
         {renderAddButton()}
-        {clients.length > 0 && renderClientStats()}
+        {employees.length > 0 && renderEmployeeStats()}
 
-        {filteredClients.length === 0 ? (
+        {filteredEmployees.length === 0 ? (
           renderEmptyState()
         ) : (
-          filteredClients.map((client) => (
-            <ClientCard 
-              key={client.id || `client-${Math.random()}`}
-              data={client} 
-              onRefresh={fetchClients}
+          filteredEmployees.map((employee) => (
+            <EmployeeCard 
+              key={employee.id || `employee-${Math.random()}`}
+              data={employee} 
+              onRefresh={fetchEmployees}
             />
           ))
         )}
@@ -232,4 +253,4 @@ const ClientListScreen: React.FC = () => {
   );
 };
 
-export default ClientListScreen;
+export default EmployeeListScreen;

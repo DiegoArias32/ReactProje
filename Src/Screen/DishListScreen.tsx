@@ -1,4 +1,4 @@
-// Src/Screen/ClientListScreen.tsx
+// Src/Screen/DishListScreen.tsx
 import React, { useCallback, useEffect, useState } from "react";
 import { 
   View, 
@@ -11,63 +11,60 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { getClients } from "../api/services/ClientServices";
-import { IClient } from "../api/types/IClient";
-import ClientCard from "../Components/ClientCard";
+import { DishStackParamList } from "../navigation/types";
+import { getDishes } from "../api/services/DishServices";
+import { IDish } from "../api/types/IDish";
+import DishCard from "../Components/DishCard";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientList"
+type DishScreenNavigationProp = NativeStackNavigationProp<
+  DishStackParamList,
+  "DishList"
 >;
 
-const ClientListScreen: React.FC = () => {
-  const [clients, setClients] = useState<IClient[]>([]);
-  const [filteredClients, setFilteredClients] = useState<IClient[]>([]);
+const DishListScreen: React.FC = () => {
+  const [dishes, setDishes] = useState<IDish[]>([]);
+  const [filteredDishes, setFilteredDishes] = useState<IDish[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigation = useNavigation<ClientScreenNavigationProp>();
+  const navigation = useNavigation<DishScreenNavigationProp>();
 
   useEffect(() => {
-    fetchClients();
+    fetchDishes();
   }, []);
 
-  // Filtrar clientes según búsqueda
+  // Filtrar platos según búsqueda
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredClients(clients);
+      setFilteredDishes(dishes);
     } else {
-      const filtered = clients.filter(client => {
-        const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
-        const email = client.email.toLowerCase();
-        const phone = client.phone.toLowerCase();
+      const filtered = dishes.filter(dish => {
+        const name = dish.name.toLowerCase();
+        const description = dish.description.toLowerCase();
         const query = searchQuery.toLowerCase();
         
-        return fullName.includes(query) || 
-               email.includes(query) || 
-               phone.includes(query);
+        return name.includes(query) || description.includes(query);
       });
-      setFilteredClients(filtered);
+      setFilteredDishes(filtered);
     }
-  }, [searchQuery, clients]);
+  }, [searchQuery, dishes]);
 
   // Recargar la lista cuando la pantalla recibe foco
   useFocusEffect(
     useCallback(() => {
-      fetchClients();
+      fetchDishes();
     }, [])
   );
 
-  const fetchClients = async () => {
+  const fetchDishes = async () => {
     try {
       setLoading(true);
-      const data = await getClients();
-      console.log("📋 Clientes obtenidos:", data);
-      setClients(data);
+      const data = await getDishes();
+      console.log("📋 Platos obtenidos:", data);
+      setDishes(data);
     } catch (error) {
-      console.error("Error al obtener clientes:", error);
+      console.error("Error al obtener platos:", error);
     } finally {
       setLoading(false);
     }
@@ -75,28 +72,28 @@ const ClientListScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchClients();
+    await fetchDishes();
     setRefreshing(false);
   }, []);
 
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>CLIENT MATRIX</Text>
+      <Text style={CyberStyles.headerTitle}>DISH MATRIX</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Manage your digital customers in cyberspace
+        Manage your culinary database
       </Text>
     </View>
   );
 
   const renderSearchBar = () => (
     <View style={{ padding: 20 }}>
-      <Text style={CyberStyles.inputLabel}>Search in the Matrix</Text>
+      <Text style={CyberStyles.inputLabel}>Search Dishes</Text>
       <TextInput
         style={[
           CyberStyles.cyberInput,
           searchQuery ? CyberStyles.inputFocused : {}
         ]}
-        placeholder="Search clients..."
+        placeholder="Search dishes..."
         placeholderTextColor={CyberColors.textMuted}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -108,17 +105,17 @@ const ClientListScreen: React.FC = () => {
     <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.primaryButton]}
-        onPress={() => navigation.navigate("ClientRegister")}
+        onPress={() => navigation.navigate("DishRegister")}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          + ADD NEW CLIENT
+          + ADD NEW DISH
         </Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderClientStats = () => (
+  const renderDishStats = () => (
     <View style={{ 
       flexDirection: 'row', 
       justifyContent: 'space-around', 
@@ -133,15 +130,21 @@ const ClientListScreen: React.FC = () => {
     }}>
       <View style={{ alignItems: 'center' }}>
         <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {clients.length}
+          {dishes.length}
         </Text>
-        <Text style={CyberStyles.secondaryText}>TOTAL CLIENTS</Text>
+        <Text style={CyberStyles.secondaryText}>TOTAL DISHES</Text>
       </View>
       <View style={{ alignItems: 'center' }}>
         <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {filteredClients.length}
+          {filteredDishes.length}
         </Text>
         <Text style={CyberStyles.secondaryText}>FILTERED</Text>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[CyberStyles.headerTitle, { fontSize: 24, color: CyberColors.warningNeon }]}>
+          🍽️
+        </Text>
+        <Text style={CyberStyles.secondaryText}>CUISINE</Text>
       </View>
     </View>
   );
@@ -149,22 +152,22 @@ const ClientListScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Matrix...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Dishes...</Text>
     </View>
   );
 
   const renderEmptyState = () => (
     <View style={CyberStyles.emptyState}>
       <Text style={[CyberStyles.headerTitle, { fontSize: 60, opacity: 0.3 }]}>
-        404
+        🍽️
       </Text>
       <Text style={CyberStyles.emptyText}>
-        No clients found in the matrix
+        No dishes found in the menu
       </Text>
       <Text style={CyberStyles.emptySubtext}>
         {searchQuery ? 
           "Try adjusting your search parameters" : 
-          "Add your first client to get started"
+          "Add your first dish to get started"
         }
       </Text>
       {!searchQuery && (
@@ -174,11 +177,11 @@ const ClientListScreen: React.FC = () => {
             CyberStyles.primaryButton,
             { marginTop: 20 }
           ]}
-          onPress={() => navigation.navigate("ClientRegister")}
+          onPress={() => navigation.navigate("DishRegister")}
           activeOpacity={0.8}
         >
           <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-            + CREATE FIRST CLIENT
+            + CREATE FIRST DISH
           </Text>
         </TouchableOpacity>
       )}
@@ -211,16 +214,16 @@ const ClientListScreen: React.FC = () => {
       >
         {renderSearchBar()}
         {renderAddButton()}
-        {clients.length > 0 && renderClientStats()}
+        {dishes.length > 0 && renderDishStats()}
 
-        {filteredClients.length === 0 ? (
+        {filteredDishes.length === 0 ? (
           renderEmptyState()
         ) : (
-          filteredClients.map((client) => (
-            <ClientCard 
-              key={client.id || `client-${Math.random()}`}
-              data={client} 
-              onRefresh={fetchClients}
+          filteredDishes.map((dish) => (
+            <DishCard 
+              key={dish.id || `dish-${Math.random()}`}
+              data={dish} 
+              onRefresh={fetchDishes}
             />
           ))
         )}
@@ -232,4 +235,4 @@ const ClientListScreen: React.FC = () => {
   );
 };
 
-export default ClientListScreen;
+export default DishListScreen;

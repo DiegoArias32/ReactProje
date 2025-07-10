@@ -1,0 +1,124 @@
+// Src/Components/DishForm.tsx
+import React, { useState } from "react";
+import { IDish } from "../api/types/IDish";
+import { ScrollView, TextInput, View, Text } from "react-native";
+import { CyberStyles, CyberColors } from "../styles/CyberStyles";
+
+interface Props {
+  form: IDish;
+  handleChange: (field: keyof IDish, value: string | number) => void;
+}
+
+const DishForm: React.FC<Props> = ({ form, handleChange }) => {
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  const renderInput = (
+    field: keyof IDish,
+    placeholder: string,
+    label: string,
+    keyboardType: 'default' | 'numeric' = 'default'
+  ) => (
+    <View style={{ marginBottom: 20 }}>
+      <Text style={CyberStyles.inputLabel}>{label}</Text>
+      <TextInput
+        style={[
+          CyberStyles.cyberInput,
+          focusedField === field ? CyberStyles.inputFocused : {}
+        ]}
+        placeholder={placeholder}
+        placeholderTextColor={CyberColors.textMuted}
+        value={field === 'price' ? form[field]?.toString() || '' : (form[field] as string) || ''}
+        onChangeText={(text) => {
+          if (field === 'price') {
+            const numericValue = parseFloat(text) || 0;
+            handleChange(field, numericValue);
+          } else {
+            handleChange(field, text);
+          }
+        }}
+        keyboardType={keyboardType}
+        onFocus={() => setFocusedField(field)}
+        onBlur={() => setFocusedField(null)}
+        multiline={field === 'description'}
+        numberOfLines={field === 'description' ? 3 : 1}
+      />
+    </View>
+  );
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getInitials = () => {
+    const name = form.name || '';
+    const words = name.split(' ');
+    if (words.length >= 2) {
+      return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  return (
+    <ScrollView 
+      contentContainerStyle={{ padding: 20 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[CyberStyles.cyberCard, { marginHorizontal: 0 }]}>
+        <View style={CyberStyles.cardHeader}>
+          <Text style={CyberStyles.cardTitle}>DISH DATA INPUT</Text>
+        </View>
+
+        {renderInput('name', 'Enter dish name...', 'DISH NAME')}
+        {renderInput('description', 'Enter dish description...', 'DESCRIPTION')}
+        {renderInput('price', 'Enter price...', 'PRICE (COP)', 'numeric')}
+
+        {/* Preview del plato */}
+        <View style={{
+          marginTop: 20,
+          padding: 15,
+          backgroundColor: CyberColors.darkerBg,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: CyberColors.borderGlow,
+        }}>
+          <Text style={[CyberStyles.inputLabel, { marginBottom: 10 }]}>
+            PREVIEW
+          </Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={[CyberStyles.cyberAvatar, { 
+              width: 40, 
+              height: 40, 
+              backgroundColor: CyberColors.warningNeon 
+            }]}>
+              <Text style={[CyberStyles.avatarText, { fontSize: 14 }]}>
+                {getInitials()}
+              </Text>
+            </View>
+            
+            <View style={{ marginLeft: 15, flex: 1 }}>
+              <Text style={CyberStyles.clientName}>
+                {form.name || 'Unnamed Dish'}
+              </Text>
+              <Text style={CyberStyles.clientEmail}>
+                {form.description || 'No description provided'}
+              </Text>
+              <Text style={[CyberStyles.clientPhone, { 
+                color: CyberColors.warningNeon, 
+                fontWeight: 'bold' 
+              }]}>
+                {formatPrice(form.price || 0)}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+export default DishForm;

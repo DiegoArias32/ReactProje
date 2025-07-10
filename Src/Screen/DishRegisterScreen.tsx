@@ -1,70 +1,58 @@
-// Src/Screen/ClientRegisterScreen.tsx
+// Src/Screen/DishRegisterScreen.tsx
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { IClient } from "../api/types/IClient";
-import { createClient } from "../api/services/ClientServices";
-import ClientForm from "../Components/ClientForm";
+import { DishStackParamList } from "../navigation/types";
+import { IDish } from "../api/types/IDish";
+import { createDish } from "../api/services/DishServices";
+import DishForm from "../Components/DishForm";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientRegisterNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientRegister"
+type DishRegisterNavigationProp = NativeStackNavigationProp<
+  DishStackParamList,
+  "DishRegister"
 >;
 
-const ClientRegisterScreen: React.FC = () => {
-  const navigation = useNavigation<ClientRegisterNavigationProp>();
+const DishRegisterScreen: React.FC = () => {
+  const navigation = useNavigation<DishRegisterNavigationProp>();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<IClient>({
+  const [form, setForm] = useState<IDish>({
     id: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    name: "",
+    description: "",
+    price: 0,
   });
 
-  const handleChange = (field: keyof IClient, value: string) => {
+  const handleChange = (field: keyof IDish, value: string | number) => {
     setForm({ ...form, [field]: value });
   };
 
-  const registerClient = async () => {
+  const registerDish = async () => {
     // Validaciones básicas
-    if (!form.firstName.trim()) {
-      Alert.alert("Error", "El primer nombre es obligatorio");
+    if (!form.name.trim()) {
+      Alert.alert("Error", "El nombre del plato es obligatorio");
       return;
     }
-    if (!form.lastName.trim()) {
-      Alert.alert("Error", "El apellido es obligatorio");
+    if (!form.description.trim()) {
+      Alert.alert("Error", "La descripción es obligatoria");
       return;
     }
-    if (!form.email.trim()) {
-      Alert.alert("Error", "El email es obligatorio");
-      return;
-    }
-    if (!form.phone.trim()) {
-      Alert.alert("Error", "El teléfono es obligatorio");
-      return;
-    }
-
-    // Validación de email básica
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      Alert.alert("Error", "Por favor ingresa un email válido");
+    if (!form.price || form.price <= 0) {
+      Alert.alert("Error", "El precio debe ser mayor a 0");
       return;
     }
 
     try {
       setLoading(true);
-      const result = await createClient(form);
+      const result = await createDish(form);
       
       // Navegar de regreso tras éxito
       navigation.goBack();
       
     } catch (error) {
-      console.error("❌ Error al registrar cliente:", error);
-      Alert.alert("Error", "No se pudo registrar el cliente en la matriz");
+      console.error("❌ Error al registrar plato:", error);
+      Alert.alert("Error", "No se pudo registrar el plato en la matriz");
     } finally {
       setLoading(false);
     }
@@ -72,9 +60,9 @@ const ClientRegisterScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>NEW CLIENT</Text>
+      <Text style={CyberStyles.headerTitle}>NEW DISH</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Add a new entity to the matrix
+        Add a new culinary creation to the matrix
       </Text>
     </View>
   );
@@ -88,21 +76,19 @@ const ClientRegisterScreen: React.FC = () => {
           loading && { opacity: 0.7 }
         ]}
         onPress={() => {
-          registerClient();
+          registerDish();
         }}
         disabled={loading}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          {loading ? "UPLOADING TO MATRIX..." : "SAVE CLIENT"}
+          {loading ? "UPLOADING TO MATRIX..." : "SAVE DISH"}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.secondaryButton]}
-        onPress={() => {
-          navigation.goBack();
-        }}
+        onPress={() => navigation.goBack()}
         disabled={loading}
         activeOpacity={0.8}
       >
@@ -118,11 +104,11 @@ const ClientRegisterScreen: React.FC = () => {
       {renderHeader()}
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ClientForm form={form} handleChange={handleChange} />
+        <DishForm form={form} handleChange={handleChange} />
         {renderFooter()}
       </ScrollView>
     </View>
   );
 };
 
-export default ClientRegisterScreen;
+export default DishRegisterScreen;

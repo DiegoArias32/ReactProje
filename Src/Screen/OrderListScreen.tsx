@@ -1,4 +1,3 @@
-// Src/Screen/ClientListScreen.tsx
 import React, { useCallback, useEffect, useState } from "react";
 import { 
   View, 
@@ -11,63 +10,63 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { getClients } from "../api/services/ClientServices";
-import { IClient } from "../api/types/IClient";
-import ClientCard from "../Components/ClientCard";
+import { OrderStackParamList } from "../navigation/types";
+import { getOrders } from "../api/services/OrderServices";
+import { IOrder } from "../api/types/IOrder";
+import OrderCard from "../Components/OrderCard";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientScreenNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientList"
+type OrderScreenNavigationProp = NativeStackNavigationProp<
+  OrderStackParamList,
+  "OrderList"
 >;
 
-const ClientListScreen: React.FC = () => {
-  const [clients, setClients] = useState<IClient[]>([]);
-  const [filteredClients, setFilteredClients] = useState<IClient[]>([]);
+const OrderListScreen: React.FC = () => {
+  const [orders, setOrders] = useState<IOrder[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<IOrder[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigation = useNavigation<ClientScreenNavigationProp>();
+  const navigation = useNavigation<OrderScreenNavigationProp>();
 
   useEffect(() => {
-    fetchClients();
+    fetchOrders();
   }, []);
 
-  // Filtrar clientes según búsqueda
+  // Filtrar órdenes según búsqueda
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredClients(clients);
+      setFilteredOrders(orders);
     } else {
-      const filtered = clients.filter(client => {
-        const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
-        const email = client.email.toLowerCase();
-        const phone = client.phone.toLowerCase();
+      const filtered = orders.filter(order => {
+        const orderId = order.id?.toString().toLowerCase() || '';
+        const customerId = order.idCustomer?.toString().toLowerCase() || '';
+        const status = order.status?.toLowerCase() || '';
         const query = searchQuery.toLowerCase();
         
-        return fullName.includes(query) || 
-               email.includes(query) || 
-               phone.includes(query);
+        return orderId.includes(query) || 
+               customerId.includes(query) || 
+               status.includes(query);
       });
-      setFilteredClients(filtered);
+      setFilteredOrders(filtered);
     }
-  }, [searchQuery, clients]);
+  }, [searchQuery, orders]);
 
   // Recargar la lista cuando la pantalla recibe foco
   useFocusEffect(
     useCallback(() => {
-      fetchClients();
+      fetchOrders();
     }, [])
   );
 
-  const fetchClients = async () => {
+  const fetchOrders = async () => {
     try {
       setLoading(true);
-      const data = await getClients();
-      console.log("📋 Clientes obtenidos:", data);
-      setClients(data);
+      const data = await getOrders();
+      console.log("📋 Órdenes obtenidas:", data);
+      setOrders(data);
     } catch (error) {
-      console.error("Error al obtener clientes:", error);
+      console.error("Error al obtener órdenes:", error);
     } finally {
       setLoading(false);
     }
@@ -75,28 +74,39 @@ const ClientListScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchClients();
+    await fetchOrders();
     setRefreshing(false);
   }, []);
 
+  // Calcular estadísticas
+  const getOrderStats = () => {
+    const pending = orders.filter(o => o.status?.toLowerCase().includes('pending') || o.status?.toLowerCase().includes('pendiente')).length;
+    const completed = orders.filter(o => o.status?.toLowerCase().includes('completed') || o.status?.toLowerCase().includes('completado')).length;
+    const cancelled = orders.filter(o => o.status?.toLowerCase().includes('cancelled') || o.status?.toLowerCase().includes('cancelado')).length;
+    
+    return { pending, completed, cancelled };
+  };
+
+  const stats = getOrderStats();
+
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>CLIENT MATRIX</Text>
+      <Text style={CyberStyles.headerTitle}>ORDER MATRIX</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Manage your digital customers in cyberspace
+        Manage your order processing system
       </Text>
     </View>
   );
 
   const renderSearchBar = () => (
     <View style={{ padding: 20 }}>
-      <Text style={CyberStyles.inputLabel}>Search in the Matrix</Text>
+      <Text style={CyberStyles.inputLabel}>Search Orders</Text>
       <TextInput
         style={[
           CyberStyles.cyberInput,
           searchQuery ? CyberStyles.inputFocused : {}
         ]}
-        placeholder="Search clients..."
+        placeholder="Search orders..."
         placeholderTextColor={CyberColors.textMuted}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -108,17 +118,17 @@ const ClientListScreen: React.FC = () => {
     <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.primaryButton]}
-        onPress={() => navigation.navigate("ClientRegister")}
+        onPress={() => navigation.navigate("OrderRegister")}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          + ADD NEW CLIENT
+          + CREATE NEW ORDER
         </Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderClientStats = () => (
+  const renderOrderStats = () => (
     <View style={{ 
       flexDirection: 'row', 
       justifyContent: 'space-around', 
@@ -132,16 +142,22 @@ const ClientListScreen: React.FC = () => {
       marginBottom: 10
     }}>
       <View style={{ alignItems: 'center' }}>
-        <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {clients.length}
+        <Text style={[CyberStyles.headerTitle, { fontSize: 24, color: CyberColors.warningNeon }]}>
+          {stats.pending}
         </Text>
-        <Text style={CyberStyles.secondaryText}>TOTAL CLIENTS</Text>
+        <Text style={CyberStyles.secondaryText}>PENDING</Text>
       </View>
       <View style={{ alignItems: 'center' }}>
-        <Text style={[CyberStyles.headerTitle, { fontSize: 24 }]}>
-          {filteredClients.length}
+        <Text style={[CyberStyles.headerTitle, { fontSize: 24, color: CyberColors.primaryNeon }]}>
+          {stats.completed}
         </Text>
-        <Text style={CyberStyles.secondaryText}>FILTERED</Text>
+        <Text style={CyberStyles.secondaryText}>COMPLETED</Text>
+      </View>
+      <View style={{ alignItems: 'center' }}>
+        <Text style={[CyberStyles.headerTitle, { fontSize: 24, color: CyberColors.dangerNeon }]}>
+          {stats.cancelled}
+        </Text>
+        <Text style={CyberStyles.secondaryText}>CANCELLED</Text>
       </View>
     </View>
   );
@@ -149,22 +165,22 @@ const ClientListScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Matrix...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Orders...</Text>
     </View>
   );
 
   const renderEmptyState = () => (
     <View style={CyberStyles.emptyState}>
       <Text style={[CyberStyles.headerTitle, { fontSize: 60, opacity: 0.3 }]}>
-        404
+        📋
       </Text>
       <Text style={CyberStyles.emptyText}>
-        No clients found in the matrix
+        No orders found in the system
       </Text>
       <Text style={CyberStyles.emptySubtext}>
         {searchQuery ? 
           "Try adjusting your search parameters" : 
-          "Add your first client to get started"
+          "Create your first order to get started"
         }
       </Text>
       {!searchQuery && (
@@ -174,11 +190,11 @@ const ClientListScreen: React.FC = () => {
             CyberStyles.primaryButton,
             { marginTop: 20 }
           ]}
-          onPress={() => navigation.navigate("ClientRegister")}
+          onPress={() => navigation.navigate("OrderRegister")}
           activeOpacity={0.8}
         >
           <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-            + CREATE FIRST CLIENT
+            + CREATE FIRST ORDER
           </Text>
         </TouchableOpacity>
       )}
@@ -211,16 +227,16 @@ const ClientListScreen: React.FC = () => {
       >
         {renderSearchBar()}
         {renderAddButton()}
-        {clients.length > 0 && renderClientStats()}
+        {orders.length > 0 && renderOrderStats()}
 
-        {filteredClients.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           renderEmptyState()
         ) : (
-          filteredClients.map((client) => (
-            <ClientCard 
-              key={client.id || `client-${Math.random()}`}
-              data={client} 
-              onRefresh={fetchClients}
+          filteredOrders.map((order) => (
+            <OrderCard 
+              key={order.id || `order-${Math.random()}`}
+              data={order} 
+              onRefresh={fetchOrders}
             />
           ))
         )}
@@ -232,4 +248,4 @@ const ClientListScreen: React.FC = () => {
   );
 };
 
-export default ClientListScreen;
+export default OrderListScreen;

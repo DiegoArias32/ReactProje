@@ -1,35 +1,35 @@
-// Src/Screen/ClientRegisterScreen.tsx
+// Src/Screen/EmployeeRegisterScreen.tsx
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { IClient } from "../api/types/IClient";
-import { createClient } from "../api/services/ClientServices";
-import ClientForm from "../Components/ClientForm";
+import { EmployeeStackParamList } from "../navigation/types";
+import { IEmployee } from "../api/types/IEmployee";
+import { createEmployee } from "../api/services/EmployeeServices";
+import EmployeeForm from "../Components/EmployeeForm";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientRegisterNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientRegister"
+type EmployeeRegisterNavigationProp = NativeStackNavigationProp<
+  EmployeeStackParamList,
+  "EmployeeRegister"
 >;
 
-const ClientRegisterScreen: React.FC = () => {
-  const navigation = useNavigation<ClientRegisterNavigationProp>();
+const EmployeeRegisterScreen: React.FC = () => {
+  const navigation = useNavigation<EmployeeRegisterNavigationProp>();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<IClient>({
+  const [form, setForm] = useState<IEmployee>({
     id: "",
     firstName: "",
     lastName: "",
-    email: "",
-    phone: "",
+    position: "",
+    salary: 0,
   });
 
-  const handleChange = (field: keyof IClient, value: string) => {
+  const handleChange = (field: keyof IEmployee, value: string | number) => {
     setForm({ ...form, [field]: value });
   };
 
-  const registerClient = async () => {
+  const registerEmployee = async () => {
     // Validaciones básicas
     if (!form.firstName.trim()) {
       Alert.alert("Error", "El primer nombre es obligatorio");
@@ -39,32 +39,25 @@ const ClientRegisterScreen: React.FC = () => {
       Alert.alert("Error", "El apellido es obligatorio");
       return;
     }
-    if (!form.email.trim()) {
-      Alert.alert("Error", "El email es obligatorio");
+    if (!form.position.trim()) {
+      Alert.alert("Error", "La posición es obligatoria");
       return;
     }
-    if (!form.phone.trim()) {
-      Alert.alert("Error", "El teléfono es obligatorio");
-      return;
-    }
-
-    // Validación de email básica
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      Alert.alert("Error", "Por favor ingresa un email válido");
+    if (!form.salary || form.salary <= 0) {
+      Alert.alert("Error", "El salario debe ser mayor a 0");
       return;
     }
 
     try {
       setLoading(true);
-      const result = await createClient(form);
+      const result = await createEmployee(form);
       
       // Navegar de regreso tras éxito
       navigation.goBack();
       
     } catch (error) {
-      console.error("❌ Error al registrar cliente:", error);
-      Alert.alert("Error", "No se pudo registrar el cliente en la matriz");
+      console.error("❌ Error al registrar empleado:", error);
+      Alert.alert("Error", "No se pudo registrar el empleado en la matriz");
     } finally {
       setLoading(false);
     }
@@ -72,9 +65,9 @@ const ClientRegisterScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>NEW CLIENT</Text>
+      <Text style={CyberStyles.headerTitle}>NEW EMPLOYEE</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Add a new entity to the matrix
+        Add a new worker to the matrix
       </Text>
     </View>
   );
@@ -88,21 +81,19 @@ const ClientRegisterScreen: React.FC = () => {
           loading && { opacity: 0.7 }
         ]}
         onPress={() => {
-          registerClient();
+          registerEmployee();
         }}
         disabled={loading}
         activeOpacity={0.8}
       >
         <Text style={[CyberStyles.buttonText, CyberStyles.primaryButtonText]}>
-          {loading ? "UPLOADING TO MATRIX..." : "SAVE CLIENT"}
+          {loading ? "UPLOADING TO MATRIX..." : "HIRE EMPLOYEE"}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[CyberStyles.cyberButton, CyberStyles.secondaryButton]}
-        onPress={() => {
-          navigation.goBack();
-        }}
+        onPress={() => navigation.goBack()}
         disabled={loading}
         activeOpacity={0.8}
       >
@@ -118,11 +109,11 @@ const ClientRegisterScreen: React.FC = () => {
       {renderHeader()}
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ClientForm form={form} handleChange={handleChange} />
+        <EmployeeForm form={form} handleChange={handleChange} />
         {renderFooter()}
       </ScrollView>
     </View>
   );
 };
 
-export default ClientRegisterScreen;
+export default EmployeeRegisterScreen;

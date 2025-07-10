@@ -1,4 +1,3 @@
-// Src/Screen/DetailsScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { 
   View, 
@@ -10,60 +9,57 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ClientStackParamList } from '../navigation/types';
-import { getClientById, deleteClient } from '../api/services/ClientServices';
-import { IClient } from '../api/types/IClient';
+import { EmployeeStackParamList } from '../navigation/types';
+import { getEmployeeById, deleteEmployee } from '../api/services/EmployeeServices';
+import { IEmployee } from '../api/types/IEmployee';
 import { CyberStyles, CyberColors } from '../styles/CyberStyles';
 
-type DetailsScreenProps = NativeStackScreenProps<ClientStackParamList, 'Details'>;
-type DetailsScreenNavigationProps = NativeStackNavigationProp<ClientStackParamList, 'Details'>;
+type EmployeeDetailsScreenProps = NativeStackScreenProps<EmployeeStackParamList, 'EmployeeDetails'>;
+type EmployeeDetailsScreenNavigationProps = NativeStackNavigationProp<EmployeeStackParamList, 'EmployeeDetails'>;
 
-const DetailsScreen: React.FC = () => {
-  const navigation = useNavigation<DetailsScreenNavigationProps>();
-  const route = useRoute<DetailsScreenProps['route']>();
+const EmployeeDetailsScreen: React.FC = () => {
+  const navigation = useNavigation<EmployeeDetailsScreenNavigationProps>();
+  const route = useRoute<EmployeeDetailsScreenProps['route']>();
   const { id } = route.params;
 
-  const [client, setClient] = useState<IClient | null>(null);
+  const [employee, setEmployee] = useState<IEmployee | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    const fetchEmployee = async () => {
       try {
-        console.log("📋 Obteniendo detalles del cliente:", id);
+        console.log("📋 Obteniendo detalles del empleado:", id);
         setLoading(true);
-        const clientData = await getClientById(id);
-        console.log("✅ Cliente obtenido:", clientData);
+        const employeeData = await getEmployeeById(id);
+        console.log("✅ Empleado obtenido:", employeeData);
         
-        // Mapear los campos correctamente
-        const mappedClient: IClient = {
-          id: clientData.id,
-          firstName: clientData.firstName || clientData.firstName || "",
-          lastName: clientData.lastName || clientData.lastName || "",
-          email: clientData.email || "",
-          phone: clientData.phone || "",
-        };
-        
-        setClient(mappedClient);
+        setEmployee({
+          id: employeeData.id,
+          firstName: employeeData.firstName || "",
+          lastName: employeeData.lastName || "",
+          position: employeeData.position || "",
+          salary: employeeData.salary || 0,
+        });
       } catch (error) {
-        console.error("❌ Error al obtener cliente:", error);
-        Alert.alert("Error", "No se pudo cargar la información del cliente");
+        console.error("❌ Error al obtener empleado:", error);
+        Alert.alert("Error", "No se pudo cargar la información del empleado");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClient();
+    fetchEmployee();
   }, [id]);
 
   const handleEdit = () => {
-    navigation.navigate("ClientUpdate", { id });
+    navigation.navigate("EmployeeUpdate", { id });
   };
 
   const handleDelete = async () => {
     Alert.alert(
       "Confirmar Eliminación",
-      "¿Estás seguro de que quieres eliminar este cliente de la matriz?",
+      "¿Estás seguro de que quieres eliminar este empleado de la matriz?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -72,14 +68,12 @@ const DetailsScreen: React.FC = () => {
           onPress: async () => {
             try {
               setDeleting(true);
-              await deleteClient(id);
-              console.log("✅ Cliente eliminado exitosamente");
-              Alert.alert("Éxito", "Cliente eliminado de la matriz correctamente", [
-                { text: "OK", onPress: () => navigation.goBack() }
-              ]);
+              await deleteEmployee(id);
+              console.log("✅ Empleado eliminado exitosamente");
+              navigation.goBack();
             } catch (error) {
-              console.error("❌ Error al eliminar cliente:", error);
-              Alert.alert("Error", "No se pudo eliminar el cliente de la matriz");
+              console.error("❌ Error al eliminar empleado:", error);
+              Alert.alert("Error", "No se pudo eliminar el empleado de la matriz");
             } finally {
               setDeleting(false);
             }
@@ -89,11 +83,26 @@ const DetailsScreen: React.FC = () => {
     );
   };
 
+  const formatSalary = (salary: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(salary);
+  };
+
+  const getInitials = () => {
+    if (!employee) return '';
+    const firstName = employee.firstName || '';
+    const lastName = employee.lastName || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>CLIENT DETAILS</Text>
+      <Text style={CyberStyles.headerTitle}>EMPLOYEE DETAILS</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Entity information from the matrix
+        Worker information from the matrix
       </Text>
     </View>
   );
@@ -101,20 +110,20 @@ const DetailsScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Entity Data...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Employee Data...</Text>
     </View>
   );
 
-  const renderClientNotFound = () => (
+  const renderEmployeeNotFound = () => (
     <View style={CyberStyles.emptyState}>
       <Text style={[CyberStyles.headerTitle, { fontSize: 60, opacity: 0.3 }]}>
         404
       </Text>
       <Text style={CyberStyles.emptyText}>
-        Entity not found in the matrix
+        Employee not found in the matrix
       </Text>
       <Text style={CyberStyles.emptySubtext}>
-        This client may have been disconnected
+        This employee may have been removed from the workforce
       </Text>
       <TouchableOpacity 
         style={[
@@ -132,24 +141,44 @@ const DetailsScreen: React.FC = () => {
     </View>
   );
 
-  const renderClientDetails = () => {
-    if (!client) return null;
+  const renderEmployeeDetails = () => {
+    if (!employee) return null;
 
-    const fullName = `${client.firstName} ${client.lastName}`.trim();
-    const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
+    const fullName = `${employee.firstName} ${employee.lastName}`.trim();
+    const initials = getInitials();
 
     return (
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar y nombre principal */}
         <View style={[CyberStyles.cyberCard, { alignItems: 'center' }]}>
-          <View style={[CyberStyles.cyberAvatar, { width: 100, height: 100 }]}>
+          <View style={[CyberStyles.cyberAvatar, { 
+            width: 100, 
+            height: 100, 
+            backgroundColor: CyberColors.accentNeon 
+          }]}>
             <Text style={[CyberStyles.avatarText, { fontSize: 32 }]}>
               {initials}
             </Text>
           </View>
           
           <Text style={[CyberStyles.headerTitle, { fontSize: 24, marginTop: 15 }]}>
-            {fullName || 'Unnamed Entity'}
+            {fullName || 'Unnamed Employee'}
+          </Text>
+          
+          <Text style={[CyberStyles.clientEmail, { 
+            fontSize: 16, 
+            marginTop: 5,
+            color: CyberColors.textSecondary 
+          }]}>
+            {employee.position || 'No position assigned'}
+          </Text>
+          
+          <Text style={[CyberStyles.headerTitle, { 
+            fontSize: 20, 
+            marginTop: 10,
+            color: CyberColors.accentNeon 
+          }]}>
+            {formatSalary(employee.salary)}
           </Text>
           
           <View style={[
@@ -169,15 +198,15 @@ const DetailsScreen: React.FC = () => {
         {/* Información detallada */}
         <View style={CyberStyles.cyberCard}>
           <View style={CyberStyles.cardHeader}>
-            <Text style={CyberStyles.cardTitle}>ENTITY DATA</Text>
+            <Text style={CyberStyles.cardTitle}>EMPLOYEE DATA</Text>
           </View>
           
           <View style={{ gap: 20 }}>
             {/* ID */}
             <View>
-              <Text style={CyberStyles.inputLabel}>ENTITY ID</Text>
+              <Text style={CyberStyles.inputLabel}>EMPLOYEE ID</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.id || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{employee.id || 'N/A'}</Text>
               </View>
             </View>
 
@@ -185,7 +214,7 @@ const DetailsScreen: React.FC = () => {
             <View>
               <Text style={CyberStyles.inputLabel}>FIRST NAME</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.firstName || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{employee.firstName || 'N/A'}</Text>
               </View>
             </View>
 
@@ -193,23 +222,29 @@ const DetailsScreen: React.FC = () => {
             <View>
               <Text style={CyberStyles.inputLabel}>LAST NAME</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.lastName || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{employee.lastName || 'N/A'}</Text>
               </View>
             </View>
 
-            {/* Email */}
+            {/* Posición */}
             <View>
-              <Text style={CyberStyles.inputLabel}>EMAIL ADDRESS</Text>
+              <Text style={CyberStyles.inputLabel}>POSITION</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.email || 'N/A'}</Text>
+                <Text style={CyberStyles.cyberText}>{employee.position || 'N/A'}</Text>
               </View>
             </View>
 
-            {/* Teléfono */}
+            {/* Salario */}
             <View>
-              <Text style={CyberStyles.inputLabel}>PHONE NUMBER</Text>
+              <Text style={CyberStyles.inputLabel}>SALARY (COP)</Text>
               <View style={[CyberStyles.cyberInput, { opacity: 0.7 }]}>
-                <Text style={CyberStyles.cyberText}>{client.phone || 'N/A'}</Text>
+                <Text style={[CyberStyles.cyberText, { 
+                  color: CyberColors.accentNeon,
+                  fontWeight: 'bold',
+                  fontSize: 18 
+                }]}>
+                  {formatSalary(employee.salary)}
+                </Text>
               </View>
             </View>
           </View>
@@ -224,7 +259,7 @@ const DetailsScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <Text style={[CyberStyles.buttonText, CyberStyles.secondaryButtonText]}>
-              EDIT ENTITY
+              EDIT EMPLOYEE
             </Text>
           </TouchableOpacity>
 
@@ -239,7 +274,7 @@ const DetailsScreen: React.FC = () => {
             activeOpacity={0.8}
           >
             <Text style={[CyberStyles.buttonText, CyberStyles.dangerButtonText]}>
-              {deleting ? "DISCONNECTING..." : "DELETE ENTITY"}
+              {deleting ? "TERMINATING..." : "TERMINATE EMPLOYEE"}
             </Text>
           </TouchableOpacity>
 
@@ -275,11 +310,11 @@ const DetailsScreen: React.FC = () => {
     );
   }
 
-  if (!client) {
+  if (!employee) {
     return (
       <View style={CyberStyles.cyberContainer}>
         {renderHeader()}
-        {renderClientNotFound()}
+        {renderEmployeeNotFound()}
       </View>
     );
   }
@@ -287,9 +322,9 @@ const DetailsScreen: React.FC = () => {
   return (
     <View style={CyberStyles.cyberContainer}>
       {renderHeader()}
-      {renderClientDetails()}
+      {renderEmployeeDetails()}
     </View>
   );
 };
 
-export default DetailsScreen;
+export default EmployeeDetailsScreen;

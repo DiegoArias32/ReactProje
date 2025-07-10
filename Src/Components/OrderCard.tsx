@@ -1,126 +1,138 @@
-// Src/Components/ClientCard.tsx
+// Src/Components/OrderCard.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { IClient } from "../api/types/IClient";
+import { IOrder } from "../api/types/IOrder";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { deleteClient } from "../api/services/ClientServices";
+import { OrderStackParamList } from "../navigation/types";
+import { deleteOrder } from "../api/services/OrderServices";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
 interface Props {
-    data: IClient;
+    data: IOrder;
     onRefresh?: () => void;
 }
 
-const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
+const OrderCard: React.FC<Props> = ({ data, onRefresh }) => {
     const navigation =
-        useNavigation<NativeStackNavigationProp<ClientStackParamList>>();
+        useNavigation<NativeStackNavigationProp<OrderStackParamList>>();
 
     const handleEdit = () => {
-        console.log("✏️ BOTÓN EDITAR PRESIONADO");
-        console.log("🔍 ID para editar:", data.id);
-        
         if (!data.id) {
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID de la orden no válido");
             return;
         }
-        navigation.navigate("ClientUpdate", { id: data.id });
+        navigation.navigate("OrderUpdate", { id: data.id });
     };
 
     const handleDelete = async () => {
-        console.log("🚨 BOTÓN ELIMINAR PRESIONADO");
-        console.log("🔍 ID del cliente:", data.id);
-        
         if (!data.id) {
-            console.error("❌ ID del cliente no válido:", data);
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID de la orden no válido");
             return;
         }
 
         try {
-            console.log("🗑️ Iniciando eliminación del cliente...");
             const idString = String(data.id);
-            
-            await deleteClient(idString);
-            console.log("✅ Cliente eliminado del servidor exitosamente");
+            await deleteOrder(idString);
             
             if (onRefresh) {
-                console.log("✅ Llamando a onRefresh()");
                 onRefresh();
             }
             
         } catch (error) {
-            console.error("❌ Error al eliminar cliente:", error);
+            console.error("❌ Error al eliminar orden:", error);
             
             let errorMessage = 'Error desconocido';
             if (error instanceof Error) {
                 errorMessage = error.message;
-            } else if (typeof error === 'string') {
-                errorMessage = error;
-            } else if (typeof error === 'object' && error !== null && 'message' in error) {
-                errorMessage = (error as { message: string }).message;
             }
             
-            Alert.alert(
-                "Error", 
-                `No se pudo eliminar el cliente: ${errorMessage}`
-            );
+            Alert.alert("Error", `No se pudo eliminar la orden: ${errorMessage}`);
         }
     };
 
     const handleViewDetails = () => {
-        console.log("👁️ BOTÓN VER PRESIONADO");
-        console.log("🔍 ID para ver detalles:", data.id);
-        
         if (!data.id) {
-            Alert.alert("Error", "ID del cliente no válido");
+            Alert.alert("Error", "ID de la orden no válido");
             return;
         }
-        navigation.navigate("Details", { id: data.id });
+        navigation.navigate("OrderDetails", { id: data.id });
+    };
+
+    // Formatear fecha
+    const formatDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CO', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return 'Fecha inválida';
+        }
+    };
+
+    // Obtener color del estado
+    const getStatusColor = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'pending':
+            case 'pendiente':
+                return CyberColors.warningNeon;
+            case 'completed':
+            case 'completado':
+                return CyberColors.primaryNeon;
+            case 'cancelled':
+            case 'cancelado':
+                return CyberColors.dangerNeon;
+            default:
+                return CyberColors.textSecondary;
+        }
     };
 
     // Generar iniciales para el avatar
     const getInitials = () => {
-        const firstName = data.firstName || '';
-        const lastName = data.lastName || '';
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+        const orderId = data.id || '';
+        return `#${orderId.slice(-3)}`.toUpperCase();
     };
-
-    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
 
     return (
         <View style={CyberStyles.clientCard}>
-            {/* Información del cliente */}
+            {/* Información de la orden */}
             <View style={CyberStyles.clientInfo}>
                 {/* Avatar futurista */}
-                <View style={CyberStyles.cyberAvatar}>
+                <View style={[CyberStyles.cyberAvatar, { backgroundColor: CyberColors.secondaryNeon }]}>
                     <Text style={CyberStyles.avatarText}>{getInitials()}</Text>
                 </View>
                 
-                {/* Detalles del cliente */}
+                {/* Detalles de la orden */}
                 <View style={CyberStyles.clientDetails}>
-                    {fullName && (
-                        <Text style={CyberStyles.clientName}>{fullName}</Text>
-                    )}
+                    <Text style={CyberStyles.clientName}>
+                        Orden #{data.id || 'N/A'}
+                    </Text>
                     <Text style={CyberStyles.clientEmail}>
-                        {data.email || 'No especificado'}
+                        Cliente: {data.idCustomer || 'N/A'}
                     </Text>
                     <Text style={CyberStyles.clientPhone}>
-                        {data.phone || 'No especificado'}
+                        {formatDate(data.date || '')}
                     </Text>
                 </View>
 
                 {/* Badge de estado */}
                 <View style={[
                     CyberStyles.statusBadge,
-                    CyberStyles.statusActive // Puedes cambiar según el estado
+                    { 
+                        backgroundColor: `${getStatusColor(data.status || '')}20`,
+                        borderColor: getStatusColor(data.status || ''),
+                    }
                 ]}>
                     <Text style={[
                         CyberStyles.statusText,
-                        CyberStyles.statusActiveText
+                        { color: getStatusColor(data.status || '') }
                     ]}>
-                        ACTIVE
+                        {(data.status || 'UNKNOWN').toUpperCase()}
                     </Text>
                 </View>
             </View>
@@ -167,7 +179,7 @@ const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
                 </TouchableOpacity>
             </View>
 
-            {/* ID debug (opcional) */}
+            {/* ID debug */}
             <Text style={[CyberStyles.mutedText, { fontSize: 10, textAlign: 'center', marginTop: 8 }]}>
                 ID: {data.id || 'N/A'}
             </Text>
@@ -175,4 +187,4 @@ const ClientCard: React.FC<Props> = ({ data, onRefresh }) => {
     );
 };
 
-export default ClientCard;
+export default OrderCard;

@@ -1,68 +1,66 @@
-// Src/Screen/ClientUpdateScreen.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClientStackParamList } from "../navigation/types";
-import { getClientById, updateClient } from "../api/services/ClientServices";
-import { IClient } from "../api/types/IClient";
-import ClientForm from "../Components/ClientForm";
+import { EmployeeStackParamList } from "../navigation/types";
+import { getEmployeeById, updateEmployee } from "../api/services/EmployeeServices";
+import { IEmployee } from "../api/types/IEmployee";
+import EmployeeForm from "../Components/EmployeeForm";
 import { CyberStyles, CyberColors } from "../styles/CyberStyles";
 
-type ClientUpdateRouteProp = RouteProp<ClientStackParamList, "ClientUpdate">;
-type ClientUpdateNavigationProp = NativeStackNavigationProp<
-  ClientStackParamList,
-  "ClientUpdate"
+type EmployeeUpdateRouteProp = RouteProp<EmployeeStackParamList, "EmployeeUpdate">;
+type EmployeeUpdateNavigationProp = NativeStackNavigationProp<
+  EmployeeStackParamList,
+  "EmployeeUpdate"
 >;
 
-const ClientUpdateScreen: React.FC = () => {
-  const route = useRoute<ClientUpdateRouteProp>();
-  const navigation = useNavigation<ClientUpdateNavigationProp>();
+const EmployeeUpdateScreen: React.FC = () => {
+  const route = useRoute<EmployeeUpdateRouteProp>();
+  const navigation = useNavigation<EmployeeUpdateNavigationProp>();
   const { id } = route.params;
 
-  const [form, setForm] = useState<IClient>({
+  const [form, setForm] = useState<IEmployee>({
     id: "",
     firstName: "",
     lastName: "",
-    email: "",
-    phone: "",
+    position: "",
+    salary: 0,
   });
   
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    const fetchEmployee = async () => {
       try {
-        console.log("📋 Obteniendo cliente por ID:", id);
+        console.log("📋 Obteniendo empleado por ID:", id);
         setLoading(true);
-        const client = await getClientById(id);
-        console.log("✅ Cliente obtenido:", client);
+        const employee = await getEmployeeById(id);
+        console.log("✅ Empleado obtenido:", employee);
         
-        // Mapear los campos correctamente
         setForm({
-          id: client.id,
-          firstName: client.firstName || client.firstName || "",
-          lastName: client.lastName || client.lastName || "",
-          email: client.email || "",
-          phone: client.phone || "",
+          id: employee.id,
+          firstName: employee.firstName || "",
+          lastName: employee.lastName || "",
+          position: employee.position || "",
+          salary: employee.salary || 0,
         });
       } catch (error) {
-        console.error("❌ Error al obtener cliente:", error);
-        Alert.alert("Error", "No se pudo cargar la información del cliente");
+        console.error("❌ Error al obtener empleado:", error);
+        Alert.alert("Error", "No se pudo cargar la información del empleado");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchClient();
+    fetchEmployee();
   }, [id]);
 
-  const handleChange = (field: keyof IClient, value: string) => {
+  const handleChange = (field: keyof IEmployee, value: string | number) => {
     setForm({ ...form, [field]: value });
   };
 
-  const updateClientData = async () => {
+  const updateEmployeeData = async () => {
     // Validaciones básicas
     if (!form.firstName.trim()) {
       Alert.alert("Error", "El primer nombre es obligatorio");
@@ -72,41 +70,25 @@ const ClientUpdateScreen: React.FC = () => {
       Alert.alert("Error", "El apellido es obligatorio");
       return;
     }
-    if (!form.email.trim()) {
-      Alert.alert("Error", "El email es obligatorio");
+    if (!form.position.trim()) {
+      Alert.alert("Error", "La posición es obligatoria");
       return;
     }
-    if (!form.phone.trim()) {
-      Alert.alert("Error", "El teléfono es obligatorio");
-      return;
-    }
-
-    // Validación de email básica
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      Alert.alert("Error", "Por favor ingresa un email válido");
+    if (!form.salary || form.salary <= 0) {
+      Alert.alert("Error", "El salario debe ser mayor a 0");
       return;
     }
 
     try {
       setUpdating(true);
-      console.log("📝 Actualizando cliente:", form);
-      const result = await updateClient(id, form);
-      console.log("✅ Cliente actualizado exitosamente:", result);
+      console.log("📝 Actualizando empleado:", form);
+      const result = await updateEmployee(id, form);
+      console.log("✅ Empleado actualizado exitosamente:", result);
       
-      Alert.alert(
-        "Éxito",
-        "Cliente actualizado en la matriz correctamente",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      navigation.goBack();
     } catch (error) {
-      console.error("❌ Error al actualizar cliente:", error);
-      Alert.alert("Error", "No se pudo actualizar el cliente en la matriz");
+      console.error("❌ Error al actualizar empleado:", error);
+      Alert.alert("Error", "No se pudo actualizar el empleado en la matriz");
     } finally {
       setUpdating(false);
     }
@@ -114,9 +96,9 @@ const ClientUpdateScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={CyberStyles.cyberHeader}>
-      <Text style={CyberStyles.headerTitle}>EDIT CLIENT</Text>
+      <Text style={CyberStyles.headerTitle}>EDIT EMPLOYEE</Text>
       <Text style={CyberStyles.headerSubtitle}>
-        Modify entity data in the matrix
+        Modify worker data in the matrix
       </Text>
     </View>
   );
@@ -124,7 +106,7 @@ const ClientUpdateScreen: React.FC = () => {
   const renderLoading = () => (
     <View style={CyberStyles.loadingContainer}>
       <ActivityIndicator size="large" color={CyberColors.primaryNeon} />
-      <Text style={CyberStyles.loadingText}>Loading Client Data...</Text>
+      <Text style={CyberStyles.loadingText}>Loading Employee Data...</Text>
     </View>
   );
 
@@ -136,7 +118,7 @@ const ClientUpdateScreen: React.FC = () => {
           CyberStyles.primaryButton,
           updating && { opacity: 0.7 }
         ]}
-        onPress={updateClientData}
+        onPress={updateEmployeeData}
         disabled={updating}
         activeOpacity={0.8}
       >
@@ -172,11 +154,11 @@ const ClientUpdateScreen: React.FC = () => {
       {renderHeader()}
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ClientForm form={form} handleChange={handleChange} />
+        <EmployeeForm form={form} handleChange={handleChange} />
         {renderFooter()}
       </ScrollView>
     </View>
   );
 };
 
-export default ClientUpdateScreen;
+export default EmployeeUpdateScreen;
